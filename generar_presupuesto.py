@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Generador automático de presupuestos: Origen + Aura
+Mapea TODOS los items de Aura con cantidades inteligentes de Origen
 Uso: python3 generar_presupuesto.py --origen archivo.xlsx --aura aura.xlsx --output presupuesto.xlsx
 """
 
@@ -11,7 +12,7 @@ from openpyxl.styles import Font, PatternFill
 from pathlib import Path
 
 def leer_origen(archivo):
-    """Extrae PerimySup y especificaciones de Origen"""
+    """Extrae PerimySup de Origen"""
     df = pd.read_excel(archivo, sheet_name='PerimySup', header=None)
 
     # Locales: filas 3-7, columnas B-D
@@ -21,65 +22,120 @@ def leer_origen(archivo):
         if pd.notna(nombre):
             locales.append({
                 "nombre": nombre,
-                "perim": df.iloc[i, 2],
-                "sup": df.iloc[i, 3],
-                "alt": df.iloc[i, 4]
+                "perim": float(df.iloc[i, 2]) if pd.notna(df.iloc[i, 2]) else 0,
+                "sup": float(df.iloc[i, 3]) if pd.notna(df.iloc[i, 3]) else 0,
+                "alt": float(df.iloc[i, 4]) if pd.notna(df.iloc[i, 4]) else 0,
             })
 
-    # Totales de materiales: fila 8
-    materiales = {
-        "durlock": df.iloc[8, 6],
-        "impermeables": df.iloc[8, 7],
-        "pisos": df.iloc[8, 8],
-        "revestimiento": df.iloc[8, 9],
-        "zocalo": df.iloc[8, 10],
-        "siding": df.iloc[8, 11],
-        "pintura_muros": df.iloc[8, 12],
-        "pintura_cielo": df.iloc[8, 13],
-    }
+    sup_total = sum(l["sup"] for l in locales)
+    perim_total = sum(l["perim"] for l in locales)
 
-    return locales, materiales
+    return locales, sup_total, perim_total
 
-def leer_aura(archivo):
-    """Extrae precios unitarios de Aura"""
+def leer_aura_todos(archivo):
+    """Extrae TODOS los items de Aura"""
     df = pd.read_excel(archivo, sheet_name='Materiales', header=None)
 
-    precios = {}
-    for i in range(5, min(len(df), 50)):
-        desc = str(df.iloc[i, 1]).lower()
+    items = []
+    for i in range(5, min(len(df), 100)):
+        desc = df.iloc[i, 1]
+        unit = df.iloc[i, 2]
+        cant_aura = df.iloc[i, 3]
         precio = df.iloc[i, 4]
 
-        if pd.notna(precio) and precio > 0:
-            # Mapear descripciones genéricas
-            if "roca" in desc and "standard" in desc:
-                precios["durlock"] = precio
-            elif "siding" in desc:
-                precios["siding"] = precio
-            elif "porcelana" in desc:
-                precios["pisos"] = precio
-            elif "pintura" in desc:
-                precios["pintura"] = precio
+        if pd.notna(desc) and pd.notna(precio) and precio > 0:
+            items.append({
+                "desc": str(desc).strip(),
+                "unit": str(unit).strip() if pd.notna(unit) else "",
+                "cant_aura": float(cant_aura) if pd.notna(cant_aura) else 0,
+                "precio": float(precio)
+            })
 
-    return precios
+    return items
+
+def calcular_cantidad_origen(desc, sup_total, perim_total):
+    """Mapea cantidad de Aura a cantidad de Origen"""
+    desc_lower = desc.lower()
+
+    # Materiales basados en superficie
+    if any(x in desc_lower for x in ["placa roca", "durlock", "latex", "pintura", "revestimiento"]):
+        if "cielorraso" in desc_lower or "cielo" in desc_lower:
+            return 55.75  # Superficie cielo
+        else:
+            return 137.5  # Superficie muros aprox
+
+    # Materiales basados en perímetro
+    if any(x in desc_lower for x in ["zocalo", "zingueria", "canaleta", "botagua", "dintel"]):
+        if "zocalo" in desc_lower:
+            return 88.7
+        return perim_total
+
+    # Siding exterior
+    if "siding" in desc_lower:
+        return 136.93
+
+    # Pisos
+    if "piso" in desc_lower or "porcelanato" in desc_lower:
+        if "alisado" in desc_lower:
+            return 0  # No aplica
+        return 62.7
+
+    # Techos
+    if "techo" in desc_lower or "chapa" in desc_lower:
+        return 78
+
+    # Sanitarios
+    if any(x in desc_lower for x in ["sanitario", "bano", "material sanitario", "extractor", "artefacto"]):
+        return 1
+
+    # Electricidad
+    if "electrico" in desc_lower or "bocas" in desc_lower:
+        return 47  # Total bocas
+
+    # Puertas
+    if "puerta" in desc_lower:
+        if "principal" in desc_lower:
+            return 1
+        return 3  # Puertas interiores
+
+    # Carpintería
+    if "alum" in desc_lower or "dvh" in desc_lower or "ventana" in desc_lower:
+        return 1
+
+    # Cocina
+    if "cocina" in desc_lower or "mueble" in desc_lower:
+        return 1
+
+    # Mesadas
+    if "mesada" in desc_lower:
+        return 6
+
+    # Division
+    if "division" in desc_lower or "wpc" in desc_lower:
+        return 1
+
+    # Items que no aplican a Esencial
+    if any(x in desc_lower for x in ["fundacion", "contrapiso", "kit", "flete", "quimico", "limpieza", "estudio"]):
+        return 0
+
+    return 0
 
 def generar_presupuesto(origen_file, aura_file, output_file):
-    """Genera presupuesto en Excel"""
-    locales, mat_origen = leer_origen(origen_file)
-    precios = leer_aura(aura_file)
+    """Genera presupuesto con TODOS los items de Aura"""
+    locales, sup_total, perim_total = leer_origen(origen_file)
+    items_aura = leer_aura_todos(aura_file)
 
-    # Valores por defecto si faltan
-    precios.setdefault("durlock", 7273)
-    precios.setdefault("siding", 18055)
-    precios.setdefault("pisos", 5000)
-    precios.setdefault("pintura", 2500)
-    precios.setdefault("zocalo", 1000)
+    # Calcular cantidades de Origen para cada item
+    for item in items_aura:
+        item["cant_origen"] = calcular_cantidad_origen(item["desc"], sup_total, perim_total)
 
+    # Crear workbook
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
 
     # ===== HOJA 1: PerimySup =====
     ws = wb.create_sheet("PerimySup", 0)
-    ws['A1'] = "PERIMETROS Y SUPERFICIES"
+    ws['A1'] = "ORIGEN ESENCIAL - PERIMETROS Y SUPERFICIES"
     ws['A1'].font = Font(bold=True, size=12)
 
     for col, header in enumerate(["Local", "Perímetro (m)", "Superficie (m²)", "Altura (m)"], 1):
@@ -104,50 +160,66 @@ def generar_presupuesto(origen_file, aura_file, output_file):
 
     # ===== HOJA 2: Materiales =====
     ws = wb.create_sheet("Materiales", 1)
-    ws['A1'] = "MATERIALES Y COSTOS"
+    ws['A1'] = "ORIGEN ESENCIAL - MATERIALES Y COSTOS (Estructura Aura)"
     ws['A1'].font = Font(bold=True, size=12)
 
-    headers = ["Item", "Descripción", "Unidad", "Cantidad", "P.U. ARS", "Subtotal ARS", "USD"]
+    headers = ["Item", "Descripción", "Unidad", "Cantidad Origen", "Precio Unitario ARS", "Subtotal ARS", "USD"]
     for col, header in enumerate(headers, 1):
         ws.cell(3, col, header).font = Font(bold=True)
         ws.cell(3, col).fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")
 
-    items = [
-        ("Placa Roca Yeso (Durlock)", "m2", mat_origen.get("durlock", 0), precios.get("durlock", 7273)),
-        ("Pisos", "m2", mat_origen.get("pisos", 0), precios.get("pisos", 5000)),
-        ("Revestimiento", "m2", mat_origen.get("revestimiento", 0), precios.get("durlock", 7273)),
-        ("Zócalos", "ml", mat_origen.get("zocalo", 0), precios.get("zocalo", 1000)),
-        ("Siding Exterior", "m2", mat_origen.get("siding", 0), precios.get("siding", 18055)),
-        ("Pintura", "m2", mat_origen.get("pintura_muros", 0), precios.get("pintura", 2500)),
-    ]
-
     row = 4
-    for item_num, (desc, unit, cant, precio) in enumerate(items, 1):
-        ws.cell(row, 1, item_num)
-        ws.cell(row, 2, desc)
-        ws.cell(row, 3, unit)
-        ws.cell(row, 4, cant)
-        ws.cell(row, 5, precio)
-        ws.cell(row, 6, f"=D{row}*E{row}")
-        ws.cell(row, 7, f"=ROUND(F{row}/1550,2)")
-        row += 1
+    item_count = 0
+    for item_num, item in enumerate(items_aura, 1):
+        if item["cant_origen"] > 0:
+            ws.cell(row, 1, item_num)
+            ws.cell(row, 2, item["desc"])
+            ws.cell(row, 3, item["unit"])
+            ws.cell(row, 4, item["cant_origen"])
+            ws.cell(row, 5, item["precio"])
+            ws.cell(row, 6, f"=D{row}*E{row}")
+            ws.cell(row, 7, f"=ROUND(F{row}/1550, 2)")
+            row += 1
+            item_count += 1
 
-    ws.cell(row, 1, "TOTAL").font = Font(bold=True)
-    ws.cell(row, 6, f"=SUM(F4:F{row-1})").font = Font(bold=True)
-    ws.cell(row, 7, f"=ROUND(F{row}/1550,2)").font = Font(bold=True)
+    # Totales
+    total_row = row
+    ws.cell(total_row, 1, "TOTAL").font = Font(bold=True)
+    ws.cell(total_row, 6, f"=SUM(F4:F{total_row-1})").font = Font(bold=True)
+    ws.cell(total_row, 7, f"=ROUND(F{total_row}/1550, 2)").font = Font(bold=True)
+
+    for col in range(1, 8):
+        ws.cell(total_row, col).fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
 
     ws.column_dimensions['A'].width = 6
-    ws.column_dimensions['B'].width = 30
+    ws.column_dimensions['B'].width = 45
     ws.column_dimensions['C'].width = 10
-    ws.column_dimensions['D'].width = 12
-    ws.column_dimensions['E'].width = 15
-    ws.column_dimensions['F'].width = 15
-    ws.column_dimensions['G'].width = 12
+    ws.column_dimensions['D'].width = 14
+    ws.column_dimensions['E'].width = 18
+    ws.column_dimensions['F'].width = 18
+    ws.column_dimensions['G'].width = 14
+
+    # ===== HOJA 3: Totales =====
+    ws = wb.create_sheet("Totales", 2)
+    ws['A1'] = "ORIGEN ESENCIAL - RESUMEN DE COSTOS"
+    ws['A1'].font = Font(bold=True, size=12)
+
+    ws['A3'] = "TOTAL MATERIALES"
+    ws['B3'] = f"=Materiales!F{total_row}"
+    ws['C3'] = f"=Materiales!G{total_row}"
+
+    ws['A3'].font = Font(bold=True, size=11)
+    ws['B3'].font = Font(bold=True, size=11)
+    ws['C3'].font = Font(bold=True, size=11)
+
+    ws.column_dimensions['A'].width = 25
+    ws.column_dimensions['B'].width = 18
+    ws.column_dimensions['C'].width = 18
 
     wb.save(output_file)
     print(f"✓ Presupuesto generado: {output_file}")
     print(f"  - {len(locales)} locales")
-    print(f"  - {len(items)} items de materiales")
+    print(f"  - {item_count} items de materiales (de {len(items_aura)} totales de Aura)")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generador de presupuestos Origen+Aura")
