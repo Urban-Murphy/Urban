@@ -1,0 +1,38 @@
+name: Generar Presupuestos Automático
+
+on:
+  push:
+    paths:
+      - 'Modelos/Origen/Etapa Presupuesto/Costos/**'
+      - 'Modelos/Aura/Etapa Presupuesto/Costos/**'
+      - 'ORIGEN_COMPUTO_PROVISORIO.xlsx'
+      - 'Aura_Costo*.xlsx'
+
+jobs:
+  presupuesto:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install pandas openpyxl
+
+      - name: Generar presupuesto Origen Esencial
+        run: |
+          python3 generar_presupuesto.py \
+            --origen "ORIGEN_COMPUTO_PROVISORIO.xlsx" \
+            --aura "Aura_Costo_30-9-26.xlsx" \
+            --output "ORIGEN_Esencial_Presupuesto_v1.xlsx"
+
+      - name: Commit cambios
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add ORIGEN_Esencial_Presupuesto_v1.xlsx
+          git commit -m "Auto: presupuesto regenerado" || echo "Sin cambios"
+          git push
