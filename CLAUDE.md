@@ -39,6 +39,8 @@ Documentos de referencia, por orden de utilidad: `URBANSIP/ESTRUCTURA_CARPETAS.m
 
 Hoy `URBANSIP/AURA/` es el modelo existente (con `pedidos/`) y `URBANSIP/catalogo/ORIGEN/` solo tiene un README; la estructura real todavía no coincide con la descrita en `ESTRUCTURA_CARPETAS.md`.
 
+**Precios compartidos (`PRECIOS/`).** Lista de precios única y análisis de costos para todas las obras, SIP y tradicional; la lista vigente va con fecha y las anteriores a `historico/`. Ver `PRECIOS/README.md`.
+
 ## Criterios de negocio validados (no cambiar sin que Adrián lo pida)
 
 - **IVA:** materiales con 21%, mano de obra sin IVA. No comentar el IVA de caja.
