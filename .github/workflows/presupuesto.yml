@@ -3,33 +3,49 @@ name: Generar Presupuestos Automático
 on:
   push:
     paths:
-      - 'Modelos/Origen/Etapa Presupuesto/Costos/**'
-      - 'Modelos/Aura/Etapa Presupuesto/Costos/**'
       - 'ORIGEN_COMPUTO_PROVISORIO.xlsx'
-      - 'Aura_Costo*.xlsx'
+      - 'Aura Costo*.xlsx'
+      - 'generar_presupuesto.py'
+
+permissions:
+  contents: write
 
 jobs:
   presupuesto:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - name: Verificar archivos de entrada
+        id: entradas
+        run: |
+          if [ -f "ORIGEN_COMPUTO_PROVISORIO.xlsx" ] && [ -f "Aura Costo 30-9-26.xlsx" ]; then
+            echo "listos=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Faltan ORIGEN_COMPUTO_PROVISORIO.xlsx o 'Aura Costo 30-9-26.xlsx' en la raíz; no se genera presupuesto."
+            echo "listos=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        if: steps.entradas.outputs.listos == 'true'
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Instalar dependencias
+        if: steps.entradas.outputs.listos == 'true'
         run: pip install pandas openpyxl
 
       - name: Generar presupuesto Origen Esencial
+        if: steps.entradas.outputs.listos == 'true'
         run: |
           python3 generar_presupuesto.py \
             --origen "ORIGEN_COMPUTO_PROVISORIO.xlsx" \
-            --aura "Aura_Costo_30-9-26.xlsx" \
+            --aura "Aura Costo 30-9-26.xlsx" \
             --output "ORIGEN_Esencial_Presupuesto_v1.xlsx"
 
       - name: Commit cambios
+        if: steps.entradas.outputs.listos == 'true'
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"

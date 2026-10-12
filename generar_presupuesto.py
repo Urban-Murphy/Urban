@@ -6,26 +6,65 @@ Uso: python3 generar_presupuesto.py --origen archivo.xlsx --aura aura.xlsx --out
 """
 
 import argparse
+import unicodedata
 import pandas as pd
 import openpyxl
 from openpyxl.styles import Font, PatternFill
 from pathlib import Path
 
+# Cantidades propias de Origen Esencial que NO se pueden derivar de PerimySup.
+# Si cambian los planos o el modelo, editar acá (y solo acá).
+CANT = {
+    "muros": 137.5,       # m2 placa/pintura/revestimiento en muros
+    "zocalo": 88.7,       # ml zócalo
+    "siding": 136.93,     # m2 siding exterior
+    "piso": 62.7,         # m2 pisos
+    "techo": 78,          # m2 techo de chapa
+    "sanitario": 1,
+    "bocas": 47,          # bocas eléctricas totales
+    "puerta_principal": 1,
+    "puerta_interior": 3,
+    "carpinteria": 1,
+    "cocina": 1,
+    "mesada": 6,
+    "division": 1,
+}
+DOLAR = 1550
+
+def sin_tildes(t):
+    return "".join(c for c in unicodedata.normalize("NFD", t) if unicodedata.category(c) != "Mn")
+
 def leer_origen(archivo):
-    """Extrae PerimySup de Origen"""
+    """Extrae PerimySup de Origen.
+    Busca la fila de encabezados (Local / Perímetro / Superficie / Altura) y lee
+    las columnas por nombre; si no la encuentra, usa las posiciones fijas B-E."""
     df = pd.read_excel(archivo, sheet_name='PerimySup', header=None)
 
-    # Locales: filas 3-7, columnas B-D
+    cols = None
+    for i in range(min(len(df), 15)):
+        fila = [sin_tildes(str(x)).strip().lower() if pd.notna(x) else "" for x in df.iloc[i]]
+        if "local" in fila:
+            def col(clave):
+                return next((j for j, v in enumerate(fila) if v.startswith(clave)), None)
+            c = (fila.index("local"), col("perim"), col("sup"), col("alt"))
+            if None not in c:
+                cols = (i + 1, c)
+                break
+
+    if cols:
+        desde, (cn, cp, cs, ca) = cols
+        filas = range(desde, len(df))
+    else:
+        desde, (cn, cp, cs, ca) = 3, (1, 2, 3, 4)
+        filas = range(3, 8)
+
     locales = []
-    for i in range(3, 8):
-        nombre = df.iloc[i, 1]
-        if pd.notna(nombre):
-            locales.append({
-                "nombre": nombre,
-                "perim": float(df.iloc[i, 2]) if pd.notna(df.iloc[i, 2]) else 0,
-                "sup": float(df.iloc[i, 3]) if pd.notna(df.iloc[i, 3]) else 0,
-                "alt": float(df.iloc[i, 4]) if pd.notna(df.iloc[i, 4]) else 0,
-            })
+    for i in filas:
+        nombre = df.iloc[i, cn]
+        if pd.isna(nombre) or str(nombre).strip().lower().startswith("total"):
+            break
+        num = lambda c: float(df.iloc[i, c]) if pd.notna(df.iloc[i, c]) else 0
+        locales.append({"nombre": nombre, "perim": num(cp), "sup": num(cs), "alt": num(ca)})
 
     sup_total = sum(l["sup"] for l in locales)
     perim_total = sum(l["perim"] for l in locales)
@@ -60,59 +99,59 @@ def calcular_cantidad_origen(desc, sup_total, perim_total):
     # Materiales basados en superficie
     if any(x in desc_lower for x in ["placa roca", "durlock", "latex", "pintura", "revestimiento"]):
         if "cielorraso" in desc_lower or "cielo" in desc_lower:
-            return 55.75  # Superficie cielo
+            return sup_total  # Superficie cielo = suma de PerimySup
         else:
-            return 137.5  # Superficie muros aprox
+            return CANT["muros"]
 
     # Materiales basados en perímetro
     if any(x in desc_lower for x in ["zocalo", "zingueria", "canaleta", "botagua", "dintel"]):
         if "zocalo" in desc_lower:
-            return 88.7
+            return CANT["zocalo"]
         return perim_total
 
     # Siding exterior
     if "siding" in desc_lower:
-        return 136.93
+        return CANT["siding"]
 
     # Pisos
     if "piso" in desc_lower or "porcelanato" in desc_lower:
         if "alisado" in desc_lower:
             return 0  # No aplica
-        return 62.7
+        return CANT["piso"]
 
     # Techos
     if "techo" in desc_lower or "chapa" in desc_lower:
-        return 78
+        return CANT["techo"]
 
     # Sanitarios
     if any(x in desc_lower for x in ["sanitario", "bano", "material sanitario", "extractor", "artefacto"]):
-        return 1
+        return CANT["sanitario"]
 
     # Electricidad
     if "electrico" in desc_lower or "bocas" in desc_lower:
-        return 47  # Total bocas
+        return CANT["bocas"]
 
     # Puertas
     if "puerta" in desc_lower:
         if "principal" in desc_lower:
-            return 1
-        return 3  # Puertas interiores
+            return CANT["puerta_principal"]
+        return CANT["puerta_interior"]
 
     # Carpintería
     if "alum" in desc_lower or "dvh" in desc_lower or "ventana" in desc_lower:
-        return 1
+        return CANT["carpinteria"]
 
     # Cocina
     if "cocina" in desc_lower or "mueble" in desc_lower:
-        return 1
+        return CANT["cocina"]
 
     # Mesadas
     if "mesada" in desc_lower:
-        return 6
+        return CANT["mesada"]
 
     # Division
     if "division" in desc_lower or "wpc" in desc_lower:
-        return 1
+        return CANT["division"]
 
     # Items que no aplican a Esencial
     if any(x in desc_lower for x in ["fundacion", "contrapiso", "kit", "flete", "quimico", "limpieza", "estudio"]):
@@ -178,7 +217,7 @@ def generar_presupuesto(origen_file, aura_file, output_file):
             ws.cell(row, 4, item["cant_origen"])
             ws.cell(row, 5, item["precio"])
             ws.cell(row, 6, f"=D{row}*E{row}")
-            ws.cell(row, 7, f"=ROUND(F{row}/1550, 2)")
+            ws.cell(row, 7, f"=ROUND(F{row}/{DOLAR}, 2)")
             row += 1
             item_count += 1
 
@@ -186,7 +225,7 @@ def generar_presupuesto(origen_file, aura_file, output_file):
     total_row = row
     ws.cell(total_row, 1, "TOTAL").font = Font(bold=True)
     ws.cell(total_row, 6, f"=SUM(F4:F{total_row-1})").font = Font(bold=True)
-    ws.cell(total_row, 7, f"=ROUND(F{total_row}/1550, 2)").font = Font(bold=True)
+    ws.cell(total_row, 7, f"=ROUND(F{total_row}/{DOLAR}, 2)").font = Font(bold=True)
 
     for col in range(1, 8):
         ws.cell(total_row, col).fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
@@ -220,6 +259,11 @@ def generar_presupuesto(origen_file, aura_file, output_file):
     print(f"✓ Presupuesto generado: {output_file}")
     print(f"  - {len(locales)} locales")
     print(f"  - {item_count} items de materiales (de {len(items_aura)} totales de Aura)")
+    omitidos = [i["desc"] for i in items_aura if i["cant_origen"] == 0]
+    if omitidos:
+        print(f"  ! {len(omitidos)} items quedaron en cantidad 0 y NO están en el presupuesto (revisar si corresponde):")
+        for d in omitidos:
+            print(f"      - {d}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generador de presupuestos Origen+Aura")
