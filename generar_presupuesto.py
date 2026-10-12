@@ -160,7 +160,7 @@ def calcular_cantidad_origen(desc, sup_total, perim_total):
     if "paneles kit" in desc_lower:
         return round(sup_total / SUP_AURA, 4)
 
-    # Flete desde Córdoba: 1 global (depende del destino, confirmar)
+    # Flete desde Córdoba: 1 global, el precio se carga a mano en el Excel (depende del destino)
     if "flete" in desc_lower:
         return 1
 
@@ -181,7 +181,8 @@ def generar_presupuesto(origen_file, aura_file, output_file):
         if "paneles kit" in item["desc"].lower():
             item["desc"] += " [ESTIMADO proporcional a Aura; falta cotización SIPCOR de Origen]"
         elif "flete" in item["desc"].lower():
-            item["desc"] += " [valor de Aura; confirmar según destino]"
+            item["desc"] += " [CARGA MANUAL: completar precio según destino]"
+            item["precio"] = None
 
     # Crear workbook
     wb = openpyxl.Workbook()
