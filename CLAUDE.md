@@ -60,6 +60,5 @@ Hoy `URBANSIP/AURA/` es el modelo existente (con `pedidos/`) y `URBANSIP/catalog
 
 ## Trampas conocidas
 
-- Los `.sh` usan `mkdir -p "dir/{a,b,c}"` con llaves **entre comillas**: bash no las expande y crea una sola carpeta literal `{a,b,c}`. Sacar las llaves de las comillas antes de usarlos.
 - Los `.xlsx`, `.pdf` y `.dwg` son binarios grandes (algunos de >10 MB): no leerlos como texto; usar openpyxl/pandas para Excel.
 - Los archivos de origen del usuario no se modifican: se lee de ellos y lo generado va en archivos nuevos y versionados.
