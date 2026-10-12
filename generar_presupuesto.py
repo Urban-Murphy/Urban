@@ -30,6 +30,9 @@ CANT = {
     "division": 1,
 }
 DOLAR = 1550
+# El kit de paneles de Aura es el presupuesto SIPCOR #2790 (73 m2 cubiertos, $26.928.565,49,
+# sin flete). Para Origen se estima proporcional a la superficie hasta tener cotización propia.
+SUP_AURA = 73
 
 def sin_tildes(t):
     return "".join(c for c in unicodedata.normalize("NFD", t) if unicodedata.category(c) != "Mn")
@@ -153,8 +156,16 @@ def calcular_cantidad_origen(desc, sup_total, perim_total):
     if "division" in desc_lower or "wpc" in desc_lower:
         return CANT["division"]
 
+    # Kit de paneles SIP: estimado proporcional a la superficie de Aura (ver SUP_AURA)
+    if "paneles kit" in desc_lower:
+        return round(sup_total / SUP_AURA, 4)
+
+    # Flete desde Córdoba: 1 global (depende del destino, confirmar)
+    if "flete" in desc_lower:
+        return 1
+
     # Items que no aplican a Esencial
-    if any(x in desc_lower for x in ["fundacion", "contrapiso", "kit", "flete", "quimico", "limpieza", "estudio"]):
+    if any(x in desc_lower for x in ["fundacion", "contrapiso", "quimico", "limpieza", "estudio"]):
         return 0
 
     return 0
@@ -167,6 +178,10 @@ def generar_presupuesto(origen_file, aura_file, output_file):
     # Calcular cantidades de Origen para cada item
     for item in items_aura:
         item["cant_origen"] = calcular_cantidad_origen(item["desc"], sup_total, perim_total)
+        if "paneles kit" in item["desc"].lower():
+            item["desc"] += " [ESTIMADO proporcional a Aura; falta cotización SIPCOR de Origen]"
+        elif "flete" in item["desc"].lower():
+            item["desc"] += " [valor de Aura; confirmar según destino]"
 
     # Crear workbook
     wb = openpyxl.Workbook()
