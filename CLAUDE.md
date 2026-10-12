@@ -48,6 +48,15 @@ Hoy `URBANSIP/AURA/` es el modelo existente (con `pedidos/`) y `URBANSIP/catalog
 - **Documentos para contratistas o clientes: sin datos internos** (ni costo objetivo, ni presupuestos previos, ni márgenes).
 - **Nomenclatura:** `<MODELO>_<Versión>_Presupuesto_v<N>.xlsx`, `Cotizacion_<PROVEEDOR>_<FECHA>`, `OC_<NUMERO>_<PROVEEDOR>_<FECHA>`, `Certificado_Quincena_<N>`.
 - Las casas tradicionales están en stand by: no desarrollarlas salvo pedido.
+- **Ciclo de mejora:** al cerrar cada obra se compara el costo real contra el modelo, ítem por ítem. Un desvío que se repite en 2 o 3 obras corrige el modelo; los cambios frecuentes pasan a ser opcionales de catálogo con precio fijo.
+- **Nunca escribir en las carpetas originales de Adrián**, solo leer.
+
+## Preguntas abiertas (preguntarle a Adrián, no asumir)
+
+- Lista de los ~6 modelos: nombre, m² y planos.
+- Qué cambia entre Esencial y Confort (si no está definido, proponerlo a partir de Aura).
+- Criterio de precio: margen, gastos generales, comisión de venta.
+- Si los precios de paneles salen del CRM de Urban Green y si el flete desde Córdoba es fijo o depende del destino.
 
 ## Trampas conocidas
 
