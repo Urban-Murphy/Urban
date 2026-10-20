@@ -31,9 +31,16 @@
 | **COSTO DIRECTO TOTAL** | ARS 90.764.814 | **USD 58.568** |
 | **Costo por m²** | - | **USD 802/m²** |
 
-### Comparativa con AURA Esencial
-| Concepto | Aura | VE | Diferencia |
+### Comparativa con AURA Esencial (ver VE_vs_Aura_Comparativa.xlsx)
+| Concepto | Aura Esencial | VE | Diferencia |
 |----------|:---:|:--:|:----------:|
+| Materiales (USD) | 44.135 | 33.748 | -10.387 (-24%) |
+| Mano de obra (USD) | 24.820 | 24.820 | 0 |
+| **Costo directo (USD)** | **68.955** | **58.568** | **-10.387 (-15%)** |
+
+Nota: Aura incluye mueble de cocina, división WPC y artefactos de Confort que VE no lleva (~USD 3.100 de la diferencia). Los precios VE son estimaciones, no cotizaciones de Mercado Libre: falta validarlos.
+
+----------|:---:|:--:|:----------:|
 | Costo Materiales (USD) | ~33.000 | 33.748 | +2% |
 | Mano de Obra (USD) | 24.820 | 24.820 | 0% |
 | **COSTO TOTAL (USD)** | ~57.000 | **58.568** | +3% |
