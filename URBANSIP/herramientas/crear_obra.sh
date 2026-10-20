@@ -13,7 +13,7 @@ CLIENTE=$2
 BASE_DIR="obras/${MODELO}-${CLIENTE}"
 
 # Crear carpetas
-mkdir -p "$BASE_DIR/{datos,planos,gestión,compras,certificados,contratos,entregas}"
+mkdir -p "$BASE_DIR"/{datos,planos,gestión,compras,certificados,contratos,entregas}
 
 # Crear README
 cat > "$BASE_DIR/README.md" << EOF

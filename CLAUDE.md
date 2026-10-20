@@ -1,0 +1,66 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Qué es este repo
+
+No es una aplicación: es el espacio de trabajo de **UrbanSIP** (casas SIP prediseñadas llave en mano; el prototipo es el modelo **Aura**, ~78 m², y se está armando **Origen**). Contiene planillas Excel, documentos Word/PDF, planos DWG, metodología en Markdown y un único script Python que genera presupuestos. El usuario (Adrián) **no es técnico**: responder en castellano, sin jerga y con pasos literales. Las decisiones de negocio (precios, márgenes, criterios) son suyas.
+
+## Comandos
+
+Dependencias (una sola vez): `pip install pandas openpyxl`
+
+Generar un presupuesto (único script ejecutable):
+
+```bash
+python3 generar_presupuesto.py --origen <ORIGEN_COMPUTO.xlsx> --aura <Aura_Costo.xlsx> --output <presupuesto.xlsx>
+```
+
+No hay tests, linter ni build. Crear estructura para un modelo u obra nueva (ejecutar **desde `URBANSIP/`**, porque usan rutas relativas `catalogo/` y `obras/`):
+
+```bash
+./herramientas/crear_modelo.sh <MODELO>
+./herramientas/crear_obra.sh <MODELO> <CLIENTE>
+```
+
+## Arquitectura
+
+**Flujo de datos del presupuesto.** `generar_presupuesto.py` cruza dos Excel: el cómputo de Origen (hoja `PerimySup`: locales con perímetro, superficie y altura, filas 3-7) y la lista de precios de Aura (hoja `Materiales`, desde la fila 5). Para cada ítem de Aura, `calcular_cantidad_origen()` decide la cantidad de Origen por coincidencia de palabras en la descripción (placa/pintura → superficie, zócalo → perímetro, siding, piso, etc.). Genera un xlsx de 3 hojas (`PerimySup`, `Materiales`, `Totales`) con fórmulas de Excel; el dólar está fijo en **1550** dentro del script.
+
+**Cantidades del script.** Las cantidades que no salen de `PerimySup` (muros, zócalo, siding, piso, techo, bocas, puertas…) están en el diccionario `CANT` al inicio de `generar_presupuesto.py`: si cambian los planos o el modelo, se editan ahí. El dólar es la constante `DOLAR`. El kit de paneles de Origen se estima proporcional a la superficie respecto de Aura (73 m²; el kit de Aura es el presupuesto SIPCOR #2790 del PDF "2790 - ROBERTO NICODERMO - VIVIENDA.pdf", sin flete) y va marcado ESTIMADO hasta tener cotización propia. El flete entra como línea con precio vacío (CARGA MANUAL): el precio se completa a mano en el Excel; no pedir cotización de flete ni de kit a SIPCOR sin que Adrián lo pida. Los ítems de Aura que no matchean ninguna palabra clave quedan en cantidad 0 y no entran al presupuesto; el script los lista al final.
+
+**Automatización.** `.github/workflows/presupuesto.yml` regenera `ORIGEN_Esencial_Presupuesto_v1.xlsx` al subir cambios, pero solo si en la raíz están `ORIGEN_COMPUTO_PROVISORIO.xlsx` y `Aura Costo 30-9-26.xlsx`; hoy falta el primero, así que el workflow no genera nada. `AUTOMATIZACION_PRESUPUESTOS.md` y `FLUJO_PRESUPUESTOS.md` describen el flujo pensado.
+
+**Método de negocio (carpeta `URBANSIP/`).** Dos niveles:
+- **Modelo de catálogo** (`catalogo/<MODELO>/`): presupuesto congelado con versión y fecha de precios (ej. "Aura Esencial v1, precios al 30/09/26"), en versiones **Esencial** y **Confort**. Se arma una vez; al cambiar precios se crea v2/v3.
+- **Obra** (`obras/<MODELO>-<CLIENTE>/`): hereda una versión del modelo más una planilla de cambios (por terreno, opcionales, diseño). Precio final = modelo + cambios aprobados por escrito antes de ejecutar.
+
+Documentos de referencia, por orden de utilidad: `URBANSIP/ESTRUCTURA_CARPETAS.md` (estructura y nomenclatura), `URBANSIP/INSTRUCTIVO_COMPUTO.md` (cómo medir y calcular cantidades), `URBANSIP/Metodologia_Gestion_UrbanSIP.md`, `URBANSIP/HANDOFF_URBANSIP.md` (contexto y criterios validados), `URBANSIP/COMO_CREAR_MODELO_U_OBRA.md`.
+
+Hoy `URBANSIP/AURA/` es el modelo existente (con `pedidos/`) y `URBANSIP/catalogo/ORIGEN/` solo tiene un README; la estructura real todavía no coincide con la descrita en `ESTRUCTURA_CARPETAS.md`.
+
+**Precios compartidos (`PRECIOS/`).** Lista de precios única y análisis de costos para todas las obras, SIP y tradicional; la lista vigente va con fecha y las anteriores a `historico/`. Ver `PRECIOS/README.md`.
+
+## Criterios de negocio validados (no cambiar sin que Adrián lo pida)
+
+- **IVA:** materiales con 21%, mano de obra sin IVA. No comentar el IVA de caja.
+- **Cómputo:** no se descuentan vanos; los baños no llevan látex; no multiplicar pisos tipo por más que la cantidad real; controlar cantidad de baños/unidades contra la memoria.
+- **Antes de comparar totales**, revisar el alcance ítem por ítem; lo que falta o no tiene precio se valúa al precio del objetivo.
+- **Compras hacia atrás:** inicio de tarea − fabricación − adjudicación − compulsa − 30 días de documentación. En SIP la compra crítica es el kit de paneles con su flete desde Córdoba.
+- **Documentos para contratistas o clientes: sin datos internos** (ni costo objetivo, ni presupuestos previos, ni márgenes).
+- **Nomenclatura:** `<MODELO>_<Versión>_Presupuesto_v<N>.xlsx`, `Cotizacion_<PROVEEDOR>_<FECHA>`, `OC_<NUMERO>_<PROVEEDOR>_<FECHA>`, `Certificado_Quincena_<N>`.
+- Las casas tradicionales están en stand by: no desarrollarlas salvo pedido.
+- **Ciclo de mejora:** al cerrar cada obra se compara el costo real contra el modelo, ítem por ítem. Un desvío que se repite en 2 o 3 obras corrige el modelo; los cambios frecuentes pasan a ser opcionales de catálogo con precio fijo.
+- **Nunca escribir en las carpetas originales de Adrián**, solo leer.
+
+## Preguntas abiertas (preguntarle a Adrián, no asumir)
+
+- Lista de los ~6 modelos: nombre, m² y planos.
+- Qué cambia entre Esencial y Confort (si no está definido, proponerlo a partir de Aura).
+- Criterio de precio: margen, gastos generales, comisión de venta.
+- Si los precios de paneles salen del CRM de Urban Green y si el flete desde Córdoba es fijo o depende del destino.
+
+## Trampas conocidas
+
+- Los `.xlsx`, `.pdf` y `.dwg` son binarios grandes (algunos de >10 MB): no leerlos como texto; usar openpyxl/pandas para Excel.
+- Los archivos de origen del usuario no se modifican: se lee de ellos y lo generado va en archivos nuevos y versionados.

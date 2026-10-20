@@ -12,7 +12,7 @@ MODELO=$1
 BASE_DIR="catalogo/$MODELO"
 
 # Crear carpetas
-mkdir -p "$BASE_DIR/{presupuesto,plan,compras,pliegos,fichas}"
+mkdir -p "$BASE_DIR"/{presupuesto,plan,compras,pliegos,fichas}
 
 # Crear README
 cat > "$BASE_DIR/README.md" << EOF
