@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1a1a1a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icono.svg">
+<link rel="apple-touch-icon" href="icono.svg">
+<title>UrbanSIP Comercial</title>
+<style>
+:root{--fondo:#f3f1ec;--tinta:#1a1a1a;--suave:#6b6860;--linea:#cfc6b2;--tarjeta:#fff;--acento:#b8a98a;--aviso:#a35a00}
+@media (prefers-color-scheme:dark){:root{--fondo:#16150f;--tinta:#f3f1ec;--suave:#a6a297;--linea:#3b382d;--tarjeta:#201f17;--acento:#b8a98a;--aviso:#e0a24d}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--fondo);color:var(--tinta);font:16px/1.4 Helvetica,Arial,sans-serif;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:5;background:var(--fondo);border-bottom:1px solid var(--linea);padding:12px 16px 8px;padding-top:calc(12px + env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:flex-end}
+.marca{font-weight:800;letter-spacing:.04em;font-size:18px}.marca small{display:block;font-weight:400;font-size:9px;letter-spacing:.08em;color:var(--suave)}
+.fecha{font-size:10px;color:var(--suave);text-align:right}
+main{padding:16px;max-width:720px;margin:auto}
+h1{font-size:24px;margin:0 0 4px;letter-spacing:-.01em}h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:24px 0 8px}
+.sub{color:var(--suave);font-size:13px;margin:0 0 16px}
+.card{background:var(--tarjeta);border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.lista{display:grid;gap:12px}
+.mod{display:block;width:100%;text-align:left;border:0;color:inherit;font:inherit;cursor:pointer;padding:0;overflow:hidden}
+.mod .foto{aspect-ratio:16/9;background:#2a2a24 center/cover;display:flex;align-items:flex-end}
+.mod .foto span{color:#fff;font-weight:800;font-size:22px;padding:10px 14px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.mod .datos{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--suave)}
+.chip{border:1px solid var(--linea);border-radius:99px;padding:2px 8px}
+.precio{font-weight:800;font-size:15px;white-space:nowrap}.precio small{display:block;font-weight:400;font-size:10px;color:var(--suave)}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nivel{background:var(--tarjeta);border-radius:14px;padding:14px}.nivel b{font-size:14px;letter-spacing:.04em}.nivel .p{font-size:24px;font-weight:800;margin:6px 0 2px}.nivel small{color:var(--suave);font-size:11px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 16px;padding:0 16px;scrollbar-width:none}
+.tabs button,.btn{border:1px solid var(--linea);background:transparent;color:var(--tinta);border-radius:99px;padding:8px 14px;font:inherit;font-size:14px;white-space:nowrap;cursor:pointer}
+.tabs button.on,.btn.on{background:var(--tinta);color:var(--fondo);border-color:var(--tinta)}
+.fila{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--linea);font-size:15px}.fila:last-child{border:0}.fila span:first-child{color:var(--suave)}.fila span:last-child{text-align:right;font-weight:600}
+.rubro{padding:10px 0;border-bottom:1px solid var(--linea)}.rubro:last-child{border:0}.rubro h4{margin:0 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave)}.rubro div{font-size:14px;margin:2px 0}.rubro b{font-size:11px;color:var(--acento);margin-right:6px}
+.aviso{background:rgba(163,90,0,.12);color:var(--aviso);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.galeria{display:grid;grid-template-columns:1fr 1fr;gap:8px}.galeria img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;background:#2a2a24}
+.vacio{color:var(--suave);font-size:14px}
+input[type=number]{font:inherit;font-size:18px;width:100%;padding:10px;border:1px solid var(--linea);border-radius:10px;background:var(--tarjeta);color:var(--tinta)}
+.volver{background:none;border:0;color:var(--suave);font:inherit;padding:0 0 12px;cursor:pointer}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--fondo);border-top:1px solid var(--linea);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;background:none;color:var(--suave);font:inherit;font-size:12px;padding:10px 4px;cursor:pointer}nav button.on{color:var(--tinta);font-weight:700}
+nav button i{display:block;font-style:normal;font-size:20px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 6px;border-bottom:1px solid var(--linea);text-align:right}th:first-child,td:first-child{text-align:left}th{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--suave)}
+.pie{font-size:11px;color:var(--suave);text-align:center;margin:24px 0 8px}
+</style>
+</head>
+<body>
+<header><div class="marca">URBANSIP<small>ARQUITECTURA EFICIENTE</small></div><div class="fecha" id="fecha"></div></header>
+<main id="app"></main>
+<nav id="nav"></nav>
+<script src="datos/datos.js"></script>
+<script>
+const D = window.DATOS, $ = s => document.querySelector(s);
+const usd = n => "USD " + Math.round(n).toLocaleString("es-AR");
+const num = n => String(n).replace(".", ",");
+let vista = "modelos", modeloId = null, tab = "resumen", nivel = "esencial";
+
+$("#fecha").innerHTML = "Precios al " + D.preciosAl;
+const NAV = [["modelos","🏠","Modelos"],["comparar","⚖️","Comparar"],["precios","💲","Precios"],["info","ℹ️","Info"]];
+function pintarNav(){ $("#nav").innerHTML = NAV.map(([k,i,t]) => `<button class="${vista===k?"on":""}" onclick="ir('${k}')"><i>${i}</i>${t}</button>`).join(""); }
+function ir(v){ vista = v; modeloId = null; tab = "resumen"; render(); scrollTo(0,0); }
+function abrir(id){ modeloId = id; tab = "resumen"; render(); scrollTo(0,0); }
+function setTab(t){ tab = t; render(); }
+function setNivel(n){ nivel = n; render(); }
+
+const img = (id, n) => `imagenes/${id}/${n}`;
+const portada = id => `imagenes/${id}/portada.jpg`;
+
+function vModelos(){
+  return `<h1>Modelos</h1><p class="sub">${D.modelos.length} modelos · tocá uno para ver el detalle</p><div class="lista">` +
+    D.modelos.map(m => `<button class="card mod" onclick="abrir('${m.id}')">
+      <div class="foto" style="background-image:url('${portada(m.id)}')"><span>${m.nombre.toUpperCase()}</span></div>
+      <div class="datos"><div class="chips"><span class="chip">${num(m.cub)} m²</span><span class="chip">${m.dorm} dorm.</span><span class="chip">${m.banos} baño${m.banos>1?"s":""}</span></div>
+      <div class="precio"><small>desde</small>${usd(m.esencial)}</div></div></button>`).join("") + `</div>`;
+}
+
+function vDetalle(m){
+  const tabs = [["resumen","Resumen"],["precios","Precios"],["terminaciones","Terminaciones"],["fotos","Fotos y planta"]];
+  let cuerpo = "";
+  if(tab === "resumen"){
+    cuerpo = (m.revisar ? `<div class="aviso">⚠ A revisar: ${m.revisar}</div>` : "") + `<div class="card">
+      ${[["Superficie cubierta", num(m.cub)+" m²"],["Semicubierto", num(m.sem)+" m²"],["Total", num(m.total)+" m²"],["Dormitorios", m.dorm],["Baños", m.banos],["Vestidor", m.vestidor?"Sí":"No"],["Lavadero", m.lavadero],["Exteriores", m.exteriores],["Plazo", m.plazo||D.info[0][1].replace(".","")]]
+        .map(([a,b]) => `<div class="fila"><span>${a}</span><span>${b}</span></div>`).join("")}</div>`;
+  } else if(tab === "precios"){
+    cuerpo = `<div class="dos"><div class="nivel"><b>ESENCIAL</b><div class="p">${usd(m.esencial)}</div><small>${num(m.cub)} m² cubiertos</small></div>
+      <div class="nivel"><b>CONFORT</b><div class="p">${usd(m.confort)}</div><small>${num(m.cub)} m² cubiertos</small></div></div>
+      <h2>Forma de pago (${nivel})</h2>
+      <div style="margin-bottom:10px"><button class="btn ${nivel==="esencial"?"on":""}" onclick="setNivel('esencial')">Esencial</button> <button class="btn ${nivel==="confort"?"on":""}" onclick="setNivel('confort')">Confort</button></div>
+      <div class="card">${D.pago.map(p => `<div class="fila"><span>${p.etapa} · ${p.pct}%</span><span>${usd(m[nivel]*p.pct/100)}</span></div>`).join("")}</div>
+      <h2>Con semicubiertos</h2><div class="card"><div class="fila"><span>${num(m.sem)} m² × USD ${D.semicubierto}</span><span>${usd(m.sem*D.semicubierto)}</span></div>
+      <div class="fila"><span>Total ${nivel} + semicubiertos</span><span>${usd(m[nivel]+m.sem*D.semicubierto)}</span></div></div>
+      <p class="vacio">Los semicubiertos se cotizan aparte; el "desde" es por m² cubiertos.</p>`;
+  } else if(tab === "terminaciones"){
+    cuerpo = m.ficha ? compararHTML() : `<p class="vacio">La ficha de terminaciones de ${m.nombre} todavía no está cargada. Como referencia, la de Aura:</p>` + compararHTML();
+  } else {
+    cuerpo = `<h2>Fotos</h2><div class="galeria" id="gal"></div><h2>Planta</h2><img id="planta" src="${img(m.id,"planta.jpg")}" style="width:100%;border-radius:10px;background:#2a2a24" onerror="this.outerHTML='<p class=vacio>Sin planta cargada.</p>'">`;
+    setTimeout(()=>{ const g=$("#gal"); if(!g) return; let h=""; for(let i=1;i<=8;i++) h+=`<img src="${img(m.id,"foto"+i+".jpg")}" loading="lazy" onerror="this.remove()">`; g.innerHTML=h; },0);
+  }
+  return `<button class="volver" onclick="ir('modelos')">← Modelos</button><h1>${m.nombre}</h1><p class="sub">Línea ${m.linea}</p>
+    <div class="tabs">${tabs.map(([k,t]) => `<button class="${tab===k?"on":""}" onclick="setTab('${k}')">${t}</button>`).join("")}</div>${cuerpo}`;
+}
+
+function compararHTML(){
+  return `<div class="card">${D.comparacion.rubros.map(([r,e,c]) => `<div class="rubro"><h4>${r}</h4><div><b>ESENCIAL</b>${e}</div><div><b>CONFORT</b>${c}</div></div>`).join("")}</div><p class="vacio">${D.comparacion.nota}</p>`;
+}
+
+function vComparar(){
+  return `<h1>Comparar modelos</h1><p class="sub">Lado a lado, por m² cubiertos</p><div class="card" style="padding:8px 10px;overflow-x:auto"><table>
+    <tr><th>Modelo</th><th>m²</th><th>Dorm.</th><th>Baños</th><th>Esencial</th><th>Confort</th></tr>
+    ${D.modelos.slice().sort((a,b)=>a.cub-b.cub).map(m => `<tr onclick="abrir('${m.id}')"><td><b>${m.nombre}</b></td><td>${num(m.cub)}</td><td>${m.dorm}</td><td>${m.banos}</td><td>${Math.round(m.esencial/1000)}k</td><td>${Math.round(m.confort/1000)}k</td></tr>`).join("")}</table></div>
+    <p class="vacio">Precios en miles de USD. Tocá una fila para ver el modelo.</p>
+    <h2>Esencial vs Confort</h2>${compararHTML()}`;
+}
+
+function vPrecios(){
+  return `<h1>Precios y pagos</h1><p class="sub">Calculadora rápida</p>
+    <div class="card"><label class="sub" for="m2">m² cubiertos</label><input id="m2" type="number" inputmode="decimal" placeholder="Ej: 72" oninput="calc()">
+    <div id="res" style="margin-top:12px"></div></div>
+    <h2>Valor por m²</h2><div class="card"><div class="fila"><span>Esencial</span><span>${usd(D.usdM2.esencial)}</span></div><div class="fila"><span>Confort</span><span>${usd(D.usdM2.confort)}</span></div><div class="fila"><span>Semicubierto</span><span>${usd(D.semicubierto)}</span></div></div>
+    <h2>Forma de pago</h2><div class="card">${D.pago.map(p => `<div class="fila"><span>${p.etapa}</span><span>${p.pct}%</span></div>`).join("")}</div>`;
+}
+function calc(){
+  const v = parseFloat($("#m2").value.replace(",", ".")), r = $("#res");
+  if(!v){ r.innerHTML = ""; return; }
+  r.innerHTML = ["esencial","confort"].map(n => { const t = v*D.usdM2[n]; return `<div class="fila"><span>${n[0].toUpperCase()+n.slice(1)}</span><span>${usd(t)}</span></div><div class="fila"><span>Anticipo (10%)</span><span>${usd(t*.1)}</span></div><div class="fila"><span>Inicio de obra (50%)</span><span>${usd(t*.5)}</span></div>`; }).join("");
+}
+
+function vInfo(){
+  return `<h1>Información general</h1><p class="sub">Condiciones comerciales</p><div class="card">${D.info.map(([a,b]) => `<div class="rubro"><h4>${a}</h4><div>${b}</div></div>`).join("")}</div>`;
+}
+
+function render(){
+  pintarNav();
+  const m = D.modelos.find(x => x.id === modeloId);
+  $("#app").innerHTML = (m ? vDetalle(m) : {modelos:vModelos,comparar:vComparar,precios:vPrecios,info:vInfo}[vista]()) +
+    `<p class="pie">Valores en USD · Borrador de trabajo sujeto a revisión · Versión ${D.version}</p>`;
+}
+render();
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
