@@ -101,7 +101,7 @@ function vDetalle(m){
   } else if(tab === "precios"){
     cuerpo = `<div class="dos"><div class="nivel"><b>ESENCIAL</b><div class="p">${usd(m.esencial)}</div><small>${num(m.cub)} m² cubiertos</small></div>
       <div class="nivel"><b>CONFORT</b><div class="p">${usd(m.confort)}</div><small>${num(m.cub)} m² cubiertos</small></div></div>
-      <h2>Forma de pago (${nivel})</h2>
+      <h2>Forma de pago</h2>
       <div style="margin-bottom:10px"><button class="btn ${nivel==="esencial"?"on":""}" onclick="setNivel('esencial')">Esencial</button> <button class="btn ${nivel==="confort"?"on":""}" onclick="setNivel('confort')">Confort</button></div>
       <div class="card">${D.pago.map(p => `<div class="fila"><span>${p.etapa} · ${p.pct}%</span><span>${usd(m[nivel]*p.pct/100)}</span></div>`).join("")}</div>
       <h2>Con semicubiertos</h2><div class="card"><div class="fila"><span>${num(m.sem)} m² × USD ${D.semicubierto}</span><span>${usd(m.sem*D.semicubierto)}</span></div>
