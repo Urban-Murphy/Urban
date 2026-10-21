@@ -45,14 +45,28 @@ nav button{flex:1;border:0;background:none;color:var(--suave);font:inherit;font-
 nav button i{display:block;font-style:normal;font-size:20px}
 table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 6px;border-bottom:1px solid var(--linea);text-align:right}th:first-child,td:first-child{text-align:left}th{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--suave)}
 .pie{font-size:11px;color:var(--suave);text-align:center;margin:24px 0 8px}
+.visor{position:fixed;inset:0;z-index:50;background:#000;display:none;flex-direction:column}.visor.on{display:flex}
+.visor .caja{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;-webkit-overflow-scrolling:touch}
+.visor img{max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in}.visor.zoom .caja{align-items:flex-start;justify-content:flex-start}.visor.zoom img{max-width:none;max-height:none;width:250%;cursor:zoom-out}
+.visor button{position:absolute;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:26px;width:44px;height:44px;border-radius:50%;cursor:pointer;z-index:2}
+.visor .x{top:calc(12px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px))}.visor .a{left:max(8px,env(safe-area-inset-left,0px));top:50%}.visor .s{right:max(8px,env(safe-area-inset-right,0px));top:50%}
+.visor .n{position:absolute;bottom:calc(12px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;color:#fff;font-size:12px;opacity:.8}
+.galeria img,#planta{cursor:zoom-in}
 </style>
 </head>
 <body>
 <header><div class="marca">URBANSIP<small>ARQUITECTURA EFICIENTE</small></div><div class="fecha" id="fecha"></div></header>
 <main id="app"></main>
 <nav id="nav"></nav>
+<div class="visor" id="visor"><button class="x" onclick="cerrar()" aria-label="Cerrar">×</button><button class="a" onclick="mover(-1)" aria-label="Anterior">‹</button><button class="s" onclick="mover(1)" aria-label="Siguiente">›</button><div class="caja"><img id="visorImg" alt="" onclick="document.getElementById('visor').classList.toggle('zoom')"></div><div class="n" id="visorN"></div></div>
 <script src="datos/datos.js"></script>
 <script>
+let fotos=[],fi=0;
+function zoom(el){fotos=[...document.querySelectorAll("#gal img,#planta")].map(i=>i.src);fi=Math.max(0,fotos.indexOf(el.src));mostrar();$("#visor").classList.add("on")}
+function mostrar(){$("#visor").classList.remove("zoom");$("#visorImg").src=fotos[fi];$("#visorN").textContent=(fi+1)+" / "+fotos.length;const m=fotos.length<2?"none":"";document.querySelector(".visor .a").style.display=m;document.querySelector(".visor .s").style.display=m}
+function mover(d){fi=(fi+d+fotos.length)%fotos.length;mostrar()}
+function cerrar(){$("#visor").classList.remove("on","zoom")}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")cerrar()});
 const D = window.DATOS, $ = s => document.querySelector(s);
 const usd = n => "USD " + Math.round(n).toLocaleString("es-AR");
 const num = n => String(n).replace(".", ",");
@@ -96,8 +110,8 @@ function vDetalle(m){
   } else if(tab === "terminaciones"){
     cuerpo = m.ficha ? compararHTML() : `<p class="vacio">La ficha de terminaciones de ${m.nombre} todavía no está cargada. Como referencia, la de Aura:</p>` + compararHTML();
   } else {
-    cuerpo = `<h2>Fotos</h2><div class="galeria" id="gal"></div><h2>Planta</h2><img id="planta" src="${img(m.id,"planta.jpg")}" style="width:100%;border-radius:10px;background:#2a2a24" onerror="this.outerHTML='<p class=vacio>Sin planta cargada.</p>'">`;
-    setTimeout(()=>{ const g=$("#gal"); if(!g) return; let h=""; for(let i=1;i<=8;i++) h+=`<img src="${img(m.id,"foto"+i+".jpg")}" loading="lazy" onerror="this.remove()">`; g.innerHTML=h; },0);
+    cuerpo = `<h2>Fotos</h2><div class="galeria" id="gal"></div><h2>Planta</h2><img id="planta" onclick="zoom(this)" src="${img(m.id,"planta.jpg")}" style="width:100%;border-radius:10px;background:#2a2a24" onerror="this.outerHTML='<p class=vacio>Sin planta cargada.</p>'">`;
+    setTimeout(()=>{ const g=$("#gal"); if(!g) return; let h=""; for(let i=1;i<=8;i++) h+=`<img src="${img(m.id,"foto"+i+".jpg")}" loading="lazy" onclick="zoom(this)" onerror="this.remove()">`; g.innerHTML=h; },0);
   }
   return `<button class="volver" onclick="ir('modelos')">← Modelos</button><h1>${m.nombre}</h1><p class="sub">Línea ${m.linea}</p>
     <div class="tabs">${tabs.map(([k,t]) => `<button class="${tab===k?"on":""}" onclick="setTab('${k}')">${t}</button>`).join("")}</div>${cuerpo}`;
